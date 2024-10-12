@@ -1,4 +1,4 @@
-import e from "express";
+import e, { response } from "express";
 import pool from "../db/dbconnection.js";
 
 export const addExpensecontroller = (req, res)=>{
@@ -67,6 +67,34 @@ export const getExpensecontroller = (req, res) => {
         }
         res.status(200).json({
             message: 'Get Expense is successfully',
+            data: row
+        })
+    })
+}
+
+export const editExpenseController = (req, res) => {
+    const authenticationUser = req.user;
+    const {id} = req.params;
+    const {title, category, description} = req.body;
+    if(!authenticationUser){
+        return res.status(404).json({
+            message: 'Authentication is failed'
+        })
+    }
+    let sql = "UPDATE expense SET title = ? , category = ? , description = ? WHERE id = ? AND user_id = (SELECT id FROM user WHERE username = ?)";
+    pool.query(sql,[title,category,description,id,authenticationUser],(error, row)=>{
+        if (error){
+            return res.status(500).json({
+                message: 'Database Error',
+            })
+        }
+        if(!title && !description && !category){
+            return res.status(500).json({
+                message: 'Invalid Data'
+            })
+        }
+        res.status(200).json({
+            message: 'Edit Expense is successfully',
             data: row
         })
     })
