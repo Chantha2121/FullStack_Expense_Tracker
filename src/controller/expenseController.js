@@ -1,3 +1,4 @@
+import e from "express";
 import pool from "../db/dbconnection.js";
 
 export const addExpensecontroller = (req, res)=>{
@@ -51,6 +52,22 @@ export const addExpensecontroller = (req, res)=>{
                     })
                 })
             }
+        })
+    })
+}
+
+export const getExpensecontroller = (req, res) => {
+    const authenticationUser = req.user;
+    let sql = "SELECT e.* FROM user u INNER JOIN expense e ON u.id = e.user_id WHERE username = ?";
+    pool.query(sql,[authenticationUser], (error, row)=>{
+        if(error){
+            return res.status(500).json({
+                message: 'Database Error',
+            })
+        }
+        res.status(200).json({
+            message: 'Get Expense is successfully',
+            data: row
         })
     })
 }
