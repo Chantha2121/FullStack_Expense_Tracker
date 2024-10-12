@@ -1,6 +1,9 @@
-import { Route } from "express";
-const expenseRouter = Route();
+import { Router } from "express";
+const expenseRouter = Router();
+import { addExpensecontroller } from "../controller/expenseController.js";
+import verifyToken from "../utils/verif_Token.js";
 
-expenseRouter.get('/addExpense')
+
+expenseRouter.post('/addExpense',verifyToken,addExpensecontroller);
 
 export default expenseRouter;

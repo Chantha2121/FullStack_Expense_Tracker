@@ -4,6 +4,8 @@ import pool from './src/db/dbconnection.js';
 import authRouter from './src/routes/authenticationRoute.js';
 import verifyToken from './src/utils/verif_Token.js';
 import userRoute from './src/routes/userRouter.js';
+import expenseRouter from './src/routes/expenseRouter.js';
+
 config();
 
 const app = express();
@@ -21,7 +23,8 @@ pool.getConnection((err,connent)=>{
 })
 
 app.use('/auth', authRouter);
-app.use('/user', userRoute)
+app.use('/user', userRoute);
+app.use('/expense',expenseRouter)
 
 app.get('/',verifyToken,(req, res)=>{
     res.send("Hello Your Page");
