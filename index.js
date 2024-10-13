@@ -5,6 +5,8 @@ import authRouter from './src/routes/authenticationRoute.js';
 import verifyToken from './src/utils/verif_Token.js';
 import userRoute from './src/routes/userRouter.js';
 import expenseRouter from './src/routes/expenseRouter.js';
+import cors from 'cors';
+import { name } from 'ejs';
 
 config();
 
@@ -13,6 +15,7 @@ const port = process.env.port;
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(cors());
 
 pool.getConnection((err,connent)=>{
     if (err) {
@@ -26,8 +29,21 @@ app.use('/auth', authRouter);
 app.use('/user', userRoute);
 app.use('/expense',expenseRouter)
 
-app.get('/',verifyToken,(req, res)=>{
-    res.send("Hello Your Page");
+const mokeData = [
+    {
+        id: 1001,
+        name: "Moke",
+    },
+    {
+        id: 1002,
+        name: 'Chantha'
+    }
+]
+
+app.get('/public',(req, res)=>{
+    res.status(200).json({
+        data: mokeData
+    })
 })
 
 app.listen(port,()=>{
