@@ -99,3 +99,42 @@ export const editExpenseController = (req, res) => {
         })
     })
 }
+
+export const deleteExpense = (req, res) => {
+    const authenticationUser = req.user;
+    const {id} = req.params;
+    if(!authenticationUser){
+        return res.status(404).json({
+            message: 'authentication is failed'
+        })
+    }
+    let getAmountSql = 'SELECT expense_amount FROM expense WHERE id = ? AND user_id = (SELECT id FROM user WHERE username = ?)';
+    const dataSql = [id, authenticationUser];
+    pool.query(getAmountSql,dataSql, (err, rows)=>{
+        if(err){
+            return res.status(404).json({
+                message: 'Database Error',
+            })
+        }
+        const expenseAmount = rows[0].expense_amount;
+        let deleteSql = 'DELETE FROM expense WHERE id = ? AND user_id = (SELECT id FROM user WHERE username = ?)'
+        pool.query(deleteSql,dataSql, (err, result)=>{
+            if(err){
+                return res.status(500).json({
+                    message: 'Database error'
+                })
+            }
+            let updateSql = "UPDATE user SET balance = balance - ? WHERE username = ?;"
+            pool.query(updateSql,[expenseAmount, authenticationUser], (err, result)=>{
+                if(err){
+                    return res.status(500).json({
+                        message: 'Database error'
+                    })
+                }
+                return res.status(200).json({
+                    message: 'Successfully is Deleted'
+                })
+            })
+        })
+    })
+}

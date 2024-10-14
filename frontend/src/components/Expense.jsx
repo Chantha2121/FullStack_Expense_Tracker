@@ -8,6 +8,9 @@ const ExpensePage = () => {
   const [name, setName] = useState('');
   const [balance, setBalance] = useState(0);
   const [image, setImage] = useState('');
+  const [selectedExpense, setSelectedExpense] = useState(null); // Store the expense selected for editing
+  const [isEditMode, setIsEditMode] = useState(false); // Track if we're in edit mode
+  const [isAddMode, setIsAddMode] = useState(false); // Track if "Add Expense" is triggered
   const baseUrl = "http://localhost:3009";
 
   // Fetch account details and expenses
@@ -45,30 +48,25 @@ const ExpensePage = () => {
 
   const handleAddExpense = (newExpense) => {
     setExpenses([...expenses, newExpense]);
+    setIsAddMode(false); // Exit "Add Mode" after adding the expense
   };
 
-  const handleUpdateExpense = async (id) => {
-    const updatedExpense = {
-      title: 'Updated Title', // Replace with updated values as needed
-      type: 'income',         // Replace with updated values as needed
-      category: 'Updated Category', // Replace with updated values as needed
-      description: 'Updated Description', // Replace with updated values as needed
-      expense_amount: 100,    // Replace with updated values as needed
-    };
-
+  const handleUpdateExpense = async (id, updatedExpenseData) => {
     try {
       const token = Cookies.get('authToken');
-      await axios.put(`${baseUrl}/expense/updateExpense/${id}`, updatedExpense, {
+      await axios.put(`${baseUrl}/expense/editExpense/${id}`, updatedExpenseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       // Update state with the new expense data
-      setExpenses((prevExpenses) => 
-        prevExpenses.map((expense) => 
-          expense.id === id ? { ...expense, ...updatedExpense } : expense
+      setExpenses((prevExpenses) =>
+        prevExpenses.map((expense) =>
+          expense.id === id ? { ...expense, ...updatedExpenseData } : expense
         )
       );
 
+      setIsEditMode(false); // Exit edit mode after update
+      setSelectedExpense(null); // Clear selected expense
       console.log('Expense updated successfully');
     } catch (error) {
       console.error('Error updating expense:', error.response ? error.response.data : error.message);
@@ -85,9 +83,23 @@ const ExpensePage = () => {
       // Remove deleted expense from state
       setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id));
       console.log('Expense deleted successfully');
+      window.location.reload();
     } catch (error) {
       console.error('Error deleting expense:', error.response ? error.response.data : error.message);
     }
+  };
+
+  // Fix: Set the selected expense for editing
+  const handleEditClick = (expense) => {
+    setSelectedExpense(expense); // Set the expense to be edited
+    setIsEditMode(true); // Enable edit mode
+    setIsAddMode(false); // Disable add mode in case it's active
+  };
+
+  const handleAddClick = () => {
+    setIsAddMode(true); // Enable add mode
+    setSelectedExpense(null); // Clear selected expense
+    setIsEditMode(false); // Disable edit mode
   };
 
   return (
@@ -99,7 +111,7 @@ const ExpensePage = () => {
           <img
             src={image}
             alt="Account"
-            className="w-48 h-48 rounded-full object-cover mb-6"
+            className=" w-96 h-96 rounded-full object-cover mb-6"
           />
           <h2 className="text-4xl font-bold text-center mb-2">{name}</h2>
           <p className="text-2xl text-gray-600 text-center">Balance: <span className="font-semibold">${balance}</span></p>
@@ -107,7 +119,21 @@ const ExpensePage = () => {
 
         {/* Right Column: Expense Management */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <AddExpense handleAddExpense={handleAddExpense} />
+          {isAddMode || isEditMode ? (
+            <AddExpense
+              handleAddExpense={handleAddExpense}
+              selectedExpense={selectedExpense}
+              isEditMode={isEditMode}
+              handleUpdateExpense={handleUpdateExpense}
+            />
+          ) : (
+            <button
+              onClick={handleAddClick}
+              className="text-blue-500 hover:underline"
+            >
+              Add New Expense
+            </button>
+          )}
         </div>
       </div>
 
@@ -140,7 +166,7 @@ const ExpensePage = () => {
                   <td className="border px-4 py-2">{expense.description || 'N/A'}</td>
                   <td className="border px-4 py-2">
                     <button
-                      onClick={() => handleUpdateExpense(expense.id)}
+                      onClick={() => handleEditClick(expense)}
                       className="text-blue-500 hover:underline mr-2"
                     >
                       Update
@@ -151,12 +177,18 @@ const ExpensePage = () => {
                     >
                       Delete
                     </button>
+                    {/* Add button in the Actions */}
+                    <button
+                      onClick={handleAddClick}
+                      className="text-green-500 hover:underline"
+                    >
+                      Add Expense
+                    </button>
                   </td>
                 </tr>
               );
             })}
           </tbody>
-
         </table>
       </div>
     </div>
