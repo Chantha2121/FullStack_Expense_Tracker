@@ -6,7 +6,7 @@ import verifyToken from './src/utils/verif_Token.js';
 import userRoute from './src/routes/userRouter.js';
 import expenseRouter from './src/routes/expenseRouter.js';
 import cors from 'cors';
-import { name } from 'ejs';
+
 
 config();
 
@@ -25,9 +25,11 @@ pool.getConnection((err,connent)=>{
     connent.release();
 })
 
+
 app.use('/auth', authRouter);
 app.use('/user', userRoute);
 app.use('/expense',expenseRouter)
+app.use('/images', express.static('upload'))
 
 const mokeData = [
     {
