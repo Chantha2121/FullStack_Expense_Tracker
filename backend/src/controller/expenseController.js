@@ -75,14 +75,14 @@ export const getExpensecontroller = (req, res) => {
 export const editExpenseController = (req, res) => {
     const authenticationUser = req.user;
     const {id} = req.params;
-    const {title, category, description} = req.body;
+    const {title, type, category, description, expense_amount} = req.body;
     if(!authenticationUser){
         return res.status(404).json({
             message: 'Authentication is failed'
         })
     }
-    let sql = "UPDATE expense SET title = ? , category = ? , description = ? WHERE id = ? AND user_id = (SELECT id FROM user WHERE username = ?)";
-    pool.query(sql,[title,category,description,id,authenticationUser],(error, row)=>{
+    let sql = "UPDATE expense SET title = ? , type = ? , category = ? , description = ? , expense_amount = ? WHERE id = ? AND user_id = (SELECT id FROM user WHERE username = ?)";
+    pool.query(sql,[title,type,category,description,expense_amount,id,authenticationUser],(error, row)=>{
         if (error){
             return res.status(500).json({
                 message: 'Database Error',
@@ -93,10 +93,28 @@ export const editExpenseController = (req, res) => {
                 message: 'Invalid Data'
             })
         }
-        res.status(200).json({
-            message: 'Edit Expense is successfully',
-            data: row
-        })
+        if(type.toLowerCase() === 'income'){
+            let sql = "UPDATE user SET balance = balance + ? WHERE username = ?";
+            pool.query(sql,[expense_amount, authenticationUser], (err, row)=>{
+                if(err){
+                    return res.status(500).json({message: 'Database Error'})
+                }
+                return res.status(200).json({
+                    message: "Edit is successfully"
+                })
+            })
+        }
+        else{
+            let sql = "UPDATE user SET balance = balance - ? WHERE username = ?";
+            pool.query(sql,[expense_amount, authenticationUser], (err, row)=>{ 
+                if(err){
+                    return res.status(500).json({message: 'Database Error'})
+                }
+                return res.status(200).json({
+                    message: "Edit is successfully"
+                })
+            })
+        }
     })
 }
 
